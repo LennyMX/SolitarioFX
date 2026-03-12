@@ -87,17 +87,21 @@ public class Controlador {
         }
     }
 
-    public void alClickearFoundation() {
+    public void alClickearFundacion(int indiceFundacion) {
+
         if (cartaSeleccionada == null) return;
 
         boolean movido = false;
+
         if ("waste".equals(origenSeleccion)) {
             movido = juego.moveWasteToFoundation();
-        } else if ("tableau".equals(origenSeleccion)) {
+        }
+        else if ("tableau".equals(origenSeleccion)) {
             movido = juego.moveTableauToFoundation(indiceSeleccion);
         }
 
         limpiarSeleccion();
+
         if (movido) {
             tablero.actualizar();
             verificarFinJuego();
