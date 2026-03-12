@@ -30,14 +30,17 @@ public class TableroFX extends BorderPane {
     public TableroFX(Controlador controlador) {
         this.controlador = controlador;
         this.juego = controlador.getJuego();
+
         setBackground(new Background(new BackgroundFill(
                 Color.web("#1a6b35"), CornerRadii.EMPTY, Insets.EMPTY)));
+
         construirBarraSuperior();
         construirAreaTableaux();
         actualizar();
     }
 
     private void construirBarraSuperior() {
+
         HBox barraSuperior = new HBox(12);
         barraSuperior.setPadding(new Insets(18, 20, 12, 20));
         barraSuperior.setAlignment(Pos.CENTER_LEFT);
@@ -49,12 +52,12 @@ public class TableroFX extends BorderPane {
                         "-fx-background-radius: 6; -fx-padding: 7 14 7 14; -fx-cursor: hand;");
         btnNueva.setOnAction(e -> controlador.nuevaPartida());
 
-        Button btnFundacion = new Button("⬆ Enviar a Fundación");
-        btnFundacion.setStyle(
-                "-fx-background-color: #4a90d9; -fx-text-fill: white; " +
+        Button btnUndo = new Button("↩ Undo");
+        btnUndo.setStyle(
+                "-fx-background-color: #d96c6c; -fx-text-fill: white; " +
                         "-fx-font-size: 13px; -fx-font-weight: bold; " +
                         "-fx-background-radius: 6; -fx-padding: 7 14 7 14; -fx-cursor: hand;");
-        btnFundacion.setOnAction(e -> controlador.alClickearFoundation());
+        btnUndo.setOnAction(e -> controlador.alClickearUndo());
 
         panelMazo  = new StackPane();
         panelMazo.setPrefSize(CartaFX.ANCHO + 4, CartaFX.ALTO + 4);
@@ -67,31 +70,53 @@ public class TableroFX extends BorderPane {
 
         HBox cajaFundaciones = new HBox(8);
         cajaFundaciones.setAlignment(Pos.CENTER);
+
         for (int i = 0; i < 4; i++) {
+
             panelesFundacion[i] = new StackPane();
             panelesFundacion[i].setPrefSize(CartaFX.ANCHO + 4, CartaFX.ALTO + 4);
+
+            final int indiceFundacion = i;
+
+            panelesFundacion[i].setOnMouseClicked(e ->
+                    controlador.alClickearFundacion(indiceFundacion)
+            );
+
             cajaFundaciones.getChildren().add(panelesFundacion[i]);
         }
 
-        barraSuperior.getChildren().addAll(btnNueva, btnFundacion, panelMazo, panelWaste, espaciador, cajaFundaciones);
+        barraSuperior.getChildren().addAll(
+                btnNueva,
+                btnUndo,
+                panelMazo,
+                panelWaste,
+                espaciador,
+                cajaFundaciones
+        );
+
         setTop(barraSuperior);
     }
 
     private void construirAreaTableaux() {
+
         HBox areaTableaux = new HBox(14);
         areaTableaux.setPadding(new Insets(8, 20, 20, 20));
         areaTableaux.setAlignment(Pos.TOP_CENTER);
 
         for (int i = 0; i < 7; i++) {
+
             Pane panel = new Pane();
             panel.setPrefWidth(CartaFX.ANCHO + 4);
             panel.setMinHeight(CartaFX.ALTO + 4);
+
             panelesTableau[i] = panel;
 
             StackPane contenedor = new StackPane(panel);
             contenedor.setAlignment(Pos.TOP_CENTER);
             contenedor.setPrefWidth(CartaFX.ANCHO + 4);
+
             HBox.setHgrow(contenedor, Priority.ALWAYS);
+
             areaTableaux.getChildren().add(contenedor);
         }
 
@@ -99,6 +124,7 @@ public class TableroFX extends BorderPane {
     }
 
     public void actualizar() {
+
         renderizarMazo();
         renderizarWaste();
         renderizarFundaciones();
@@ -110,95 +136,131 @@ public class TableroFX extends BorderPane {
     }
 
     private void renderizarMazo() {
+
         panelMazo.getChildren().clear();
         panelMazo.setOnMouseClicked(null);
 
         if (juego.getDrawPile().hayCartas()) {
+
             StackPane reverso = construirReverso();
+
             reverso.setOnMouseClicked(e -> controlador.alClickearMazo());
             reverso.setStyle("-fx-cursor: hand;");
+
             panelMazo.getChildren().add(reverso);
+
         } else {
+
             Label lbl = new Label("↺");
             lbl.setStyle("-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 28px;");
             lbl.setMouseTransparent(true);
+
             panelMazo.getChildren().add(lbl);
+
             panelMazo.setOnMouseClicked(e -> controlador.alClickearMazo());
         }
     }
 
     private void renderizarWaste() {
+
         panelWaste.getChildren().clear();
         panelWaste.setOnMouseClicked(null);
 
         CartaInglesa top = juego.getWastePile().verCarta();
+
         if (top != null) {
+
             top.makeFaceUp();
+
             CartaFX cv = new CartaFX(top);
             cv.setStyle("-fx-cursor: hand;");
+
             cv.setOnMouseClicked(e -> {
                 e.consume();
                 controlador.alClickearWaste(cv);
             });
+
             panelWaste.getChildren().add(cv);
         }
     }
 
     private void renderizarFundaciones() {
+
         ArrayList<FoundationDeck> fundaciones = juego.getFoundation();
 
         for (int i = 0; i < 4; i++) {
+
             panelesFundacion[i].getChildren().clear();
-            panelesFundacion[i].setOnMouseClicked(null);
 
             FoundationDeck fd = fundaciones.get(i);
             CartaInglesa top = fd.getUltimaCarta();
 
             if (top != null) {
+
                 top.makeFaceUp();
+
                 CartaFX cv = new CartaFX(top);
                 cv.setMouseTransparent(true);
+
                 panelesFundacion[i].getChildren().add(cv);
+
             } else {
+
                 String[] palos = {"♣", "♦", "❤", "♠"};
+
                 Label lbl = new Label(palos[i]);
                 lbl.setStyle("-fx-text-fill: rgba(255,255,255,0.4); -fx-font-size: 22px;");
                 lbl.setMouseTransparent(true);
+
                 panelesFundacion[i].getChildren().add(lbl);
             }
         }
     }
 
     private void renderizarTableaux() {
+
         ArrayList<TableauDeck> tableaux = juego.getTableau();
 
         for (int i = 0; i < 7; i++) {
+
             Pane panel = panelesTableau[i];
             panel.getChildren().clear();
 
             TableauDeck td = tableaux.get(i);
             ArrayList<CartaInglesa> cartas = td.getCards();
+
             final int indiceTableau = i + 1;
 
             if (cartas.isEmpty()) {
+
                 Rectangle invisible = new Rectangle(CartaFX.ANCHO, CartaFX.ALTO);
                 invisible.setFill(Color.TRANSPARENT);
-                invisible.setOnMouseClicked(e -> controlador.alClickearTableauVacio(indiceTableau));
+
+                invisible.setOnMouseClicked(e ->
+                        controlador.alClickearTableauVacio(indiceTableau));
+
                 invisible.setStyle("-fx-cursor: hand;");
+
                 panel.getChildren().add(invisible);
                 panel.setMinHeight(CartaFX.ALTO);
+
             } else {
+
                 panel.setMinHeight(calcularAlturaTableau(cartas));
 
                 double offsetY = 0;
+
                 for (int j = 0; j < cartas.size(); j++) {
+
                     CartaInglesa carta = cartas.get(j);
                     CartaFX cv = new CartaFX(carta);
+
                     cv.setLayoutX(0);
                     cv.setLayoutY(offsetY);
                     cv.setStyle("-fx-cursor: hand;");
 
                     final CartaFX finalCv = cv;
+
                     cv.setOnMouseClicked(e -> {
                         e.consume();
                         controlador.alClickearCartaTableau(finalCv, indiceTableau);
@@ -215,29 +277,42 @@ public class TableroFX extends BorderPane {
     }
 
     private double calcularAlturaTableau(ArrayList<CartaInglesa> cartas) {
+
         double altura = CartaFX.ALTO;
+
         for (int i = 0; i < cartas.size() - 1; i++) {
             altura += cartas.get(i).isFaceup() ? OFFSET_BOCA_ARRIBA : OFFSET_BOCA_ABAJO;
         }
+
         return altura + 10;
     }
 
     private StackPane construirReverso() {
+
         StackPane sp = new StackPane();
         sp.setPrefSize(CartaFX.ANCHO, CartaFX.ALTO);
+
         try {
+
             var stream = getClass().getResourceAsStream("/cartas/reverso.png");
+
             if (stream != null) {
-                javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView(
-                        new javafx.scene.image.Image(stream));
+
+                javafx.scene.image.ImageView iv =
+                        new javafx.scene.image.ImageView(
+                                new javafx.scene.image.Image(stream));
+
                 iv.setFitWidth(CartaFX.ANCHO);
                 iv.setFitHeight(CartaFX.ALTO);
                 iv.setPreserveRatio(false);
+
                 sp.getChildren().add(iv);
             }
+
         } catch (Exception e) {
             System.err.println("No se encontró reverso.png");
         }
+
         return sp;
     }
 }
